@@ -11,6 +11,7 @@ import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -84,7 +85,7 @@ public class MyChartJavaFX extends Application {
             String xUpperLimitString = xUpperLimitTextField.getText();
             double xUpperLimit = Double.valueOf(xUpperLimitString);
             
-            MyChart functionChart = new MyChart(xUpperLimit);
+            MyChart functionChart = new MyChart(xUpperLimit, 465, 740);
             
             AnchorPane.setBottomAnchor(functionChart, 35.0);
             //AnchorPane.setTopAnchor(functionChart, 6.0);
