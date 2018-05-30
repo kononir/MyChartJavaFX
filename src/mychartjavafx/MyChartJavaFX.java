@@ -90,7 +90,7 @@ public class MyChartJavaFX extends Application {
             AnchorPane.setBottomAnchor(functionChart, 35.0);
             //AnchorPane.setTopAnchor(functionChart, 6.0);
             AnchorPane.setLeftAnchor(functionChart, 170.0);
-            //AnchorPane.setRightAnchor(functionChart, 6.0);
+            AnchorPane.setRightAnchor(functionChart, 15.0);
             root.getChildren().add(functionChart);
             
             CreateChartButtonController buttonController

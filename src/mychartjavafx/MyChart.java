@@ -9,8 +9,10 @@ import javafx.geometry.Orientation;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.ScrollBar;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 
 /**
  *
@@ -30,9 +32,9 @@ import javafx.scene.paint.Color;
     private final double inaccuracy = 5;
     
     public MyChart(double xUpperLimit, double height, double width){
-        this.coordinatesOriginX = borderIndent;
+        this.coordinatesOriginX = 0;
         this.coordinatesEndX = (xUpperLimit * coordinateIndent)
-                             + borderIndent + arrowXIndent + inaccuracy;
+                             + borderIndent + borderIndent + arrowXIndent + inaccuracy;
         this.coordinatesOriginY = arrowYIndent + inaccuracy;
         
         super.setHeight(height);
@@ -46,18 +48,32 @@ import javafx.scene.paint.Color;
     }
     
     private void createWidgetWithXAxis(){
-        this.resize(this.getWidth(), this.getHeight());
+        ScrollPane scroll = new ScrollPane();
+        scroll.setMinSize(this.getWidth(), this.getHeight());
+        scroll.setMaxSize(this.getWidth(), this.getHeight());
+        
+        /*Rectangle rec = new Rectangle(1000, 1000);
+        rec.setFill(Color.BLACK);
+        scroll.setContent(rec);*/
+        scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        
+        //VBox.setVgrow()
         
         double canvasHeight = borderIndent + arrowYIndent + inaccuracy;
         Canvas graphicCanvas = new Canvas(coordinatesEndX, canvasHeight);
-        this.getChildren().add(graphicCanvas);
+        this.getChildren().add(scroll);
+        scroll.setContent(graphicCanvas);
         
-        graphicCanvas.relocate(0, this.getHeight());
+        //graphicCanvas.relocate(0, this.getHeight());
+        
         
         GraphicsContext graphicsContext = graphicCanvas.getGraphicsContext2D();
         drawXAxis(graphicsContext);
         
-        if(coordinatesEndX > this.getWidth()){
+        graphicCanvas.setTranslateY(this.getHeight() - borderIndent);
+        
+        /*if(coordinatesEndX > this.getWidth()){
             ScrollBar horizontalScrollBar = new ScrollBar();
             
             horizontalScrollBar.setOnScroll(OnMousePressed -> {
@@ -101,7 +117,7 @@ import javafx.scene.paint.Color;
             verticalScrollBar.relocate(verticalScrollBarX, verticalScrollBarY);
             
             this.getChildren().addAll(horizontalScrollBar, verticalScrollBar);
-        }
+        }*/
     }
     
     private void drawXAxis(GraphicsContext graphicsContext){
