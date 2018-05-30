@@ -5,22 +5,18 @@
  */
 package mychartjavafx;
 
-import javafx.geometry.Orientation;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.ScrollBar;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 
 /**
  *
  * @author Vlad
  */
     public class MyChart extends Region {
-    private double currentX;
-    private double currentY;
+    private final Canvas graphicCanvas;
     private final double coordinatesOriginX;
     private final double coordinatesEndX;
     private double coordinatesOriginY;
@@ -30,94 +26,54 @@ import javafx.scene.shape.Rectangle;
     private final double arrowXIndent = 15;
     private final double arrowYIndent = 5;
     private final double inaccuracy = 5;
+    private double prevCanvasX;
+    private double prevCanvasY;
     
     public MyChart(double xUpperLimit, double height, double width){
-        this.coordinatesOriginX = 0;
+        this.coordinatesOriginX = borderIndent;
         this.coordinatesEndX = (xUpperLimit * coordinateIndent)
-                             + borderIndent + borderIndent + arrowXIndent + inaccuracy;
+                             + (2 * borderIndent) + arrowXIndent + inaccuracy;
         this.coordinatesOriginY = arrowYIndent + inaccuracy;
+        this.prevCanvasX = coordinatesOriginX;
+        this.prevCanvasY = arrowYIndent + inaccuracy;
         
         super.setHeight(height);
         super.setWidth(width);
         
-        createWidgetWithXAxis();
+        graphicCanvas = createCanvasWithXAxis();
     }
     
-    public void repaint(){
-        
+    public void repaint(double currentX, double currentY){
+        double currentCanvasX = currentX * coordinateIndent + borderIndent;
+        double currentCanvasY = currentY * coordinateIndent;
+                
+        GraphicsContext graphicsContext = graphicCanvas.getGraphicsContext2D();
+        if(currentCanvasY > prevCanvasY){
+            /*graphicCanvas.setHeight(borderIndent + currentY * coordinateIndent
+                                         + arrowYIndent + inaccuracy);*/
+            coordinatesOriginY = currentY * coordinateIndent + arrowYIndent + inaccuracy;
+            drawYAxis(graphicsContext);
+            //graphicCanvas.setTranslateY(graphicCanvas.getHeight() - borderIndent); //смещение?
+            //this.getChildren().get(0).
+        }
     }
     
-    private void createWidgetWithXAxis(){
+    private Canvas createCanvasWithXAxis(){
         ScrollPane scroll = new ScrollPane();
         scroll.setMinSize(this.getWidth(), this.getHeight());
         scroll.setMaxSize(this.getWidth(), this.getHeight());
         
-        /*Rectangle rec = new Rectangle(1000, 1000);
-        rec.setFill(Color.BLACK);
-        scroll.setContent(rec);*/
-        scroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-        scroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
-        
-        //VBox.setVgrow()
-        
         double canvasHeight = borderIndent + arrowYIndent + inaccuracy;
-        Canvas graphicCanvas = new Canvas(coordinatesEndX, canvasHeight);
+        Canvas canvas = new Canvas(coordinatesEndX, canvasHeight);
         this.getChildren().add(scroll);
-        scroll.setContent(graphicCanvas);
+        scroll.setContent(canvas);
         
-        //graphicCanvas.relocate(0, this.getHeight());
-        
-        
-        GraphicsContext graphicsContext = graphicCanvas.getGraphicsContext2D();
+        GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
         drawXAxis(graphicsContext);
         
-        graphicCanvas.setTranslateY(this.getHeight() - borderIndent);
+        canvas.setTranslateY(this.getHeight() - borderIndent);
         
-        /*if(coordinatesEndX > this.getWidth()){
-            ScrollBar horizontalScrollBar = new ScrollBar();
-            
-            horizontalScrollBar.setOnScroll(OnMousePressed -> {
-                graphicCanvas.setTranslateX(graphicCanvas.getTranslateX() 
-                        + OnMousePressed.getTextDeltaX());
-            });
-            
-            ScrollBar verticalScrollBar = new ScrollBar();
-            verticalScrollBar.setOrientation(Orientation.VERTICAL);
-            
-            horizontalScrollBar.setMin(coordinatesOriginX);
-            horizontalScrollBar.setMax(coordinatesEndX);
-            horizontalScrollBar.setValue(coordinatesOriginX);
-            
-            verticalScrollBar.setMin(0);
-            verticalScrollBar.setMax(0);
-            verticalScrollBar.setValue(0);
-            
-            double horizontalScrollBarMinWidth
-                    = this.getWidth() - coordinatesOriginX + borderIndent;
-            double horizontalScrollBarMinHeight = 3;
-            horizontalScrollBar.setMinSize(
-                    horizontalScrollBarMinWidth,
-                    horizontalScrollBarMinHeight
-            );
-            
-            double verticalScrollBarMinWidth
-                    = this.getHeight() - borderIndent - 3;
-            double verticalScrollBarMinHeight = 3;
-            verticalScrollBar.setMinSize(
-                    verticalScrollBarMinHeight,
-                    verticalScrollBarMinWidth
-            );
-            
-            double horizontalScrollBarX = this.getHeight() + borderIndent;
-            double horizontalScrollBarY = 0;
-            horizontalScrollBar.relocate(horizontalScrollBarY, horizontalScrollBarX);
-            
-            double verticalScrollBarY = borderIndent * 2;
-            double verticalScrollBarX = 0;
-            verticalScrollBar.relocate(verticalScrollBarX, verticalScrollBarY);
-            
-            this.getChildren().addAll(horizontalScrollBar, verticalScrollBar);
-        }*/
+        return canvas;
     }
     
     private void drawXAxis(GraphicsContext graphicsContext){
@@ -198,6 +154,20 @@ import javafx.scene.shape.Rectangle;
                 "x",
                 axisTextXCoordinate,
                 axisTextYCoordinate
+        );
+    }
+    
+    private void drawYAxis(GraphicsContext graphicsContext){
+        graphicsContext.setStroke(Color.BLUE);
+        graphicsContext.setLineWidth(1);
+        
+        //graphicsContext.get //попробовать получить объекты из контекста
+        
+        graphicsContext.strokeLine(
+                coordinatesOriginX,
+                -200,
+                coordinatesOriginX,
+                10
         );
     }
 }

@@ -11,7 +11,6 @@ import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -88,7 +87,6 @@ public class MyChartJavaFX extends Application {
             MyChart functionChart = new MyChart(xUpperLimit, 465, 740);
             
             AnchorPane.setBottomAnchor(functionChart, 35.0);
-            //AnchorPane.setTopAnchor(functionChart, 6.0);
             AnchorPane.setLeftAnchor(functionChart, 170.0);
             AnchorPane.setRightAnchor(functionChart, 15.0);
             root.getChildren().add(functionChart);
@@ -97,9 +95,13 @@ public class MyChartJavaFX extends Application {
                     = new CreateChartButtonController(a, xLowerLimit, xUpperLimit);
             
             double currentY = 0;
+            double currentX = 0;
+            double stepH = 0.1;
             while(currentY != -1){
                 currentY = buttonController.controll();
-                System.out.println(currentY);
+                functionChart.repaint(currentX, currentY);
+                
+                currentX += stepH;
             }
             
         });
