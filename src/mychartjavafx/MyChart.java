@@ -22,7 +22,8 @@ import javafx.scene.paint.Color;
     private final double arrowYIndent = 5;
     
     public MyChart(double xUpperLimit, double height, double width){
-        super.setPrefSize(width, height);
+        super.setMinSize(width, height);
+        super.setMaxSize(width, height);
         createCanvas();
     }
     
@@ -41,7 +42,7 @@ import javafx.scene.paint.Color;
         scroll.setMinSize(this.getWidth(), this.getHeight());
         scroll.setMaxSize(this.getWidth(), this.getHeight());
         
-        graphicCanvas = new Canvas(this.getWidth(), this.getHeight());
+        graphicCanvas = new Canvas(this.getWidth() - 10, this.getHeight() - 10);
         this.getChildren().add(scroll);
         scroll.setContent(graphicCanvas);
     }
