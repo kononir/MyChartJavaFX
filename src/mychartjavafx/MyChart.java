@@ -16,81 +16,78 @@ import javafx.scene.paint.Color;
  * @author Vlad
  */
     public class MyChart extends Region {
-    private final Canvas graphicCanvas;
-    private final double coordinatesOriginX;
-    private final double coordinatesEndX;
-    private double coordinatesOriginY;
-    private final double coordinatesEndY = 0;
-    private final double borderIndent = 50;
+    private Canvas graphicCanvas;
     private final double coordinateIndent = 300;
     private final double arrowXIndent = 15;
     private final double arrowYIndent = 5;
-    private final double inaccuracy = 5;
-    private double prevCanvasX;
-    private double prevCanvasY;
     
     public MyChart(double xUpperLimit, double height, double width){
-        this.coordinatesOriginX = borderIndent;
-        this.coordinatesEndX = (xUpperLimit * coordinateIndent)
-                             + (2 * borderIndent) + arrowXIndent + inaccuracy;
-        this.coordinatesOriginY = arrowYIndent + inaccuracy;
-        this.prevCanvasX = coordinatesOriginX;
-        this.prevCanvasY = arrowYIndent + inaccuracy;
-        
-        super.setHeight(height);
-        super.setWidth(width);
-        
-        graphicCanvas = createCanvasWithXAxis();
+        super.setPrefSize(width, height);
+        createCanvas();
     }
     
     public void repaint(double currentX, double currentY){
-        double currentCanvasX = currentX * coordinateIndent + borderIndent;
+        double currentCanvasX = currentX * coordinateIndent;
         double currentCanvasY = currentY * coordinateIndent;
                 
         GraphicsContext graphicsContext = graphicCanvas.getGraphicsContext2D();
-        if(currentCanvasY > prevCanvasY){
-            /*graphicCanvas.setHeight(borderIndent + currentY * coordinateIndent
-                                         + arrowYIndent + inaccuracy);*/
-            coordinatesOriginY = currentY * coordinateIndent + arrowYIndent + inaccuracy;
-            drawYAxis(graphicsContext);
-            //graphicCanvas.setTranslateY(graphicCanvas.getHeight() - borderIndent); //смещение?
-            //this.getChildren().get(0).
-        }
+        /*if(currentCanvasY > prevCanvasY){
+            
+        }*/
     }
     
-    private Canvas createCanvasWithXAxis(){
+    private void createCanvas(){
         ScrollPane scroll = new ScrollPane();
         scroll.setMinSize(this.getWidth(), this.getHeight());
         scroll.setMaxSize(this.getWidth(), this.getHeight());
         
-        double canvasHeight = borderIndent + arrowYIndent + inaccuracy;
-        Canvas canvas = new Canvas(coordinatesEndX, canvasHeight);
+        graphicCanvas = new Canvas(this.getWidth(), this.getHeight());
         this.getChildren().add(scroll);
-        scroll.setContent(canvas);
-        
-        GraphicsContext graphicsContext = canvas.getGraphicsContext2D();
-        drawXAxis(graphicsContext);
-        
-        canvas.setTranslateY(this.getHeight() - borderIndent);
-        
-        return canvas;
+        scroll.setContent(graphicCanvas);
     }
     
-    private void drawXAxis(GraphicsContext graphicsContext){
+    public final void drawXAxis(double leftLimit, double rightLimit){
+        double coordinatesLeftLimit = (leftLimit * coordinateIndent);
+        
+        double inaccuracy = 5;
+        double coordinatesRightLimit = (rightLimit * coordinateIndent)
+                                     + arrowXIndent + inaccuracy;
+        
+        double coordinatesOriginX = this.getWidth() / 2;
+        double coordinatesOriginY = this.getHeight() / 2;
+        
+        double coordinatesLeftEndX;
+        if(coordinatesLeftLimit > 0){
+            coordinatesLeftEndX = coordinatesOriginX - coordinatesLeftLimit;
+        }
+        else{
+            coordinatesLeftEndX = coordinatesOriginX + coordinatesLeftLimit;            
+        }
+        
+        double coordinatesRightEndX;
+        if(coordinatesRightLimit > 0){
+            coordinatesRightEndX = coordinatesOriginX + coordinatesRightLimit;
+        }
+        else{
+            coordinatesRightEndX = coordinatesOriginX - coordinatesRightLimit; 
+        }
+        
+        GraphicsContext graphicsContext = graphicCanvas.getGraphicsContext2D();
+        
         graphicsContext.setStroke(Color.BLUE);
         graphicsContext.setLineWidth(1);
         
         graphicsContext.strokeLine(
-                coordinatesOriginX,
+                coordinatesLeftEndX,
                 coordinatesOriginY,
-                coordinatesEndX,
+                coordinatesRightEndX,
                 coordinatesOriginY
         );
         
-        double coordinateArrowXAxisX = coordinatesEndX - arrowXIndent;
+        double coordinateArrowXAxisX = coordinatesRightEndX - arrowXIndent;
         double coordinateArrowXAxisTopY = coordinatesOriginY - arrowYIndent;
         graphicsContext.strokeLine(
-                coordinatesEndX,
+                coordinatesRightEndX,
                 coordinatesOriginY,
                 coordinateArrowXAxisX,
                 coordinateArrowXAxisTopY
@@ -98,13 +95,13 @@ import javafx.scene.paint.Color;
         
         double coordinateArrowXAxisBottomY = coordinatesOriginY + arrowYIndent;
         graphicsContext.strokeLine(
-                coordinatesEndX,
+                coordinatesRightEndX,
                 coordinatesOriginY,
                 coordinateArrowXAxisX,
                 coordinateArrowXAxisBottomY
         );
         
-        double lastXCoordinate = coordinatesEndX - arrowXIndent - inaccuracy;
+        double lastXCoordinate = coordinatesRightEndX - arrowXIndent - inaccuracy;
         double stepXCoordinate = coordinateIndent * 0.1;
         double secondXCoordinate = coordinatesOriginX + stepXCoordinate;
         for(double xCoordinate = secondXCoordinate;
@@ -127,7 +124,7 @@ import javafx.scene.paint.Color;
             double divisionTextXCoordinate = xCoordinate - axisIndent;
             double divisionTextYCoordinate = coordinatesOriginY + axisIndent;
             String coordinateText = String.valueOf(
-                    (xCoordinate - borderIndent) / coordinateIndent
+                    (xCoordinate - stepXCoordinate) / coordinateIndent
             );
             graphicsContext.strokeText(
                     coordinateText,
@@ -148,7 +145,7 @@ import javafx.scene.paint.Color;
             );
         
         double xAxisIndent = 3;
-        double axisTextXCoordinate = coordinatesEndX - arrowXIndent - 7.5;
+        double axisTextXCoordinate = coordinatesRightEndX - arrowXIndent - 7.5;
         double axisTextYCoordinate = coordinatesOriginY - xAxisIndent;
         graphicsContext.strokeText(
                 "x",
@@ -163,11 +160,6 @@ import javafx.scene.paint.Color;
         
         //graphicsContext.get //попробовать получить объекты из контекста
         
-        graphicsContext.strokeLine(
-                coordinatesOriginX,
-                -200,
-                coordinatesOriginX,
-                10
-        );
+        
     }
 }

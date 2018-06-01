@@ -99,9 +99,9 @@ public class MyChartJavaFX extends Application {
             double stepH = 0.1;
             while(currentY != -1){
                 currentY = buttonController.controll();
-                functionChart.repaint(currentX, currentY);
+                /*functionChart.repaint(currentX, currentY);
                 
-                currentX += stepH;
+                currentX += stepH;*/
             }
             
         });
