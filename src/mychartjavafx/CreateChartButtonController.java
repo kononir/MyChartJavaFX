@@ -25,7 +25,7 @@ public class CreateChartButtonController {
     }
     
     public final double controll(){
-        if(currentX > xUpperLimit){
+        if(currentX > xUpperLimit + inaccuracyE){
             double noX = -1;
             return noX;
         }
@@ -41,9 +41,11 @@ public class CreateChartButtonController {
                 currentY += summand;
             }
             
-            currentX += stepH;
+            currentX = MyMath.roundDouble(currentX + stepH, 1);
             
-            return currentY;
+            double roundCurrentY = MyMath.roundDouble(currentY, 4);
+            
+            return roundCurrentY;
         }
     }
     

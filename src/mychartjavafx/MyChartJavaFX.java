@@ -9,12 +9,15 @@ import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
+import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.text.Font;
@@ -38,11 +41,6 @@ public class MyChartJavaFX extends Application {
         
         xColumn.setCellValueFactory(new PropertyValueFactory<>("x"));
         yColumn.setCellValueFactory(new PropertyValueFactory<>("y"));
-        
-        ObservableList<CoordinateTableClass> tableCoordinatesList
-                = FXCollections.observableArrayList(); 
-        
-        coordinateTable.setItems(tableCoordinatesList);
         
         coordinateTable.setMaxWidth(163);
                 
@@ -84,7 +82,13 @@ public class MyChartJavaFX extends Application {
             String xUpperLimitString = xUpperLimitTextField.getText();
             double xUpperLimit = Double.valueOf(xUpperLimitString);
             
-            MyChart functionChart = new MyChart(xUpperLimit, 465, 740);
+            ObservableList<CoordinateTableClass> tableCoordinatesList 
+                    = FXCollections.observableArrayList(); 
+        
+            coordinateTable.setItems(tableCoordinatesList);
+            
+            MyChart functionChart = new MyChart(460, 775);
+            functionChart.drawBothAxis(xLowerLimit, xUpperLimit);
             
             AnchorPane.setBottomAnchor(functionChart, 35.0);
             AnchorPane.setLeftAnchor(functionChart, 170.0);
@@ -95,14 +99,33 @@ public class MyChartJavaFX extends Application {
                     = new CreateChartButtonController(a, xLowerLimit, xUpperLimit);
             
             double currentY = 0;
-            double currentX = 0;
+            double currentX = xLowerLimit;
             double stepH = 0.1;
             while(currentY != -1){
                 currentY = buttonController.controll();
-                /*functionChart.repaint(currentX, currentY);
                 
-                currentX += stepH;*/
+                if(currentY == -1)
+                    break;
+                
+                String currentYString = String.valueOf(currentY);
+                String currentXString = String.valueOf(currentX);
+                
+                CoordinateTableClass point = new CoordinateTableClass(
+                        currentXString, currentYString
+                );
+                tableCoordinatesList.add(point);
+                
+                
+                
+                currentX = MyMath.roundDouble(currentX + stepH, 1);
             }
+            
+            currentX = Double.valueOf(tableCoordinatesList.get(tableCoordinatesList.size() - 1).getX());
+            currentY = Double.valueOf(tableCoordinatesList.get(tableCoordinatesList.size() - 1).getX());
+            
+            functionChart.repaint(currentX, currentY);
+            
+            setOnGraphicScrolling(functionChart, scaleLabel);
             
         });
         
@@ -118,11 +141,50 @@ public class MyChartJavaFX extends Application {
         AnchorPane.setLeftAnchor(functionalItemsHBox,  170.0);
         root.getChildren().add(functionalItemsHBox);
         
-        Scene scene = new Scene(root, 910, 500);
+        Scene scene = new Scene(root, 950, 500);
         
         primaryStage.setTitle("MyChart");
         primaryStage.setScene(scene);
         primaryStage.show();
+    }
+    
+    void setOnGraphicScrolling(MyChart functionChart, Label scaleLabel){
+        ScrollPane scroll = functionChart.getScroll();
+        Canvas graphicCanvas = functionChart.getGraphicCanvas();
+        
+        scroll.setOnKeyPressed(ctrlKey -> { 
+            KeyCode keyCode = ctrlKey.getCode();
+            if(keyCode.equals(KeyCode.CONTROL)){
+                graphicCanvas.setOnScroll(scrolling -> {
+                    scrolling.consume();
+
+                    double zoomIntensity = 0.05;
+                    double zoomDelta = scrolling.getTextDeltaY();
+                    double zoomFactor = Math.exp(zoomDelta * zoomIntensity);
+
+                    double prevScale = graphicCanvas.getScaleX();
+                    double newScale = prevScale * zoomFactor;
+                    
+                    double roundNewScale = MyMath.roundDouble(newScale, 2);
+                    String newScaleString = String.valueOf(roundNewScale);
+                    String scaleLabelText = "Масштаб - " + newScaleString 
+                                          + ":" + newScaleString;
+                    scaleLabel.setText(scaleLabelText);
+
+                    graphicCanvas.setScaleX(newScale);
+                    graphicCanvas.setScaleY(newScale);
+
+                    scroll.layout();
+                });
+            }
+        });
+
+        scroll.setOnKeyReleased(ctrlKey -> {
+            KeyCode keyCode = ctrlKey.getCode();
+            if(keyCode.equals(KeyCode.CONTROL)){
+                graphicCanvas.setOnScroll(null);
+            }
+        });
     }
 
     /**

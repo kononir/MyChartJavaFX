@@ -9,20 +9,20 @@ package mychartjavafx;
  *
  * @author Vlad
  */
-public class CoordinateTableClass {
-    private final String x;
-    private final String y;
+public class CoordinateClass {
+    private final double x;
+    private final double y;
     
-    CoordinateTableClass(String x, String y){
+    CoordinateClass(double x, double y){
         this.x = x;
         this.y = y;
     }
     
-    public String getX(){
+    public double getX(){
         return x;
     }
     
-    public String getY(){
+    public double getY(){
         return y;
     }
 }
