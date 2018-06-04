@@ -88,7 +88,7 @@ public class MyChartJavaFX extends Application {
             coordinateTable.setItems(tableCoordinatesList);
             
             MyChart functionChart = new MyChart(460, 775);
-            functionChart.drawBothAxis(xLowerLimit, xUpperLimit);
+            functionChart.createWorkingSpace(xLowerLimit, xUpperLimit);
             
             AnchorPane.setBottomAnchor(functionChart, 35.0);
             AnchorPane.setLeftAnchor(functionChart, 170.0);
@@ -115,15 +115,15 @@ public class MyChartJavaFX extends Application {
                 );
                 tableCoordinatesList.add(point);
                 
-                
+                functionChart.repaint(currentX, currentY);
                 
                 currentX = MyMath.roundDouble(currentX + stepH, 1);
             }
             
-            currentX = Double.valueOf(tableCoordinatesList.get(tableCoordinatesList.size() - 1).getX());
-            currentY = Double.valueOf(tableCoordinatesList.get(tableCoordinatesList.size() - 1).getX());
+            /*currentX = Double.valueOf(tableCoordinatesList.get(tableCoordinatesList.size() - 1).getX());
+            currentY = Double.valueOf(tableCoordinatesList.get(tableCoordinatesList.size() - 1).getX());*/
             
-            functionChart.repaint(currentX, currentY);
+            
             
             setOnGraphicScrolling(functionChart, scaleLabel);
             

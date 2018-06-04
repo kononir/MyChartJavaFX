@@ -24,7 +24,7 @@ import javafx.scene.paint.Color;
     private Canvas graphicCanvas;
     private ScrollPane scroll;
     private final double coordinateXIndent = 300;
-    private final double coordinateYIndent = 300;
+    private final double coordinateYIndent = 200;
     private final double border = 50;
     private double coordinatesOriginX;
     private double coordinatesOriginY;
@@ -41,12 +41,19 @@ import javafx.scene.paint.Color;
     public MyChart(double height, double width){
         super.setHeight(height);
         super.setWidth(width);
-        createWorkingSpace();
     }
     
-    private void createWorkingSpace(){
+    public final void createWorkingSpace(double leftLimit, double rightLimit){
+        double leftLimitLength = Math.abs(Math.pow(2, leftLimit)) + 1;
+        double rightLimitLength = Math.pow(2, rightLimit) + 1;
+        
         graphicCanvas = new Canvas();
-        graphicCanvas.setHeight(this.getHeight() - 10);
+        
+        if(leftLimitLength > rightLimitLength)
+            graphicCanvas.setHeight(2 * leftLimitLength * coordinateYIndent);
+        else
+            graphicCanvas.setHeight(2 * rightLimitLength * coordinateYIndent);
+            
         graphicCanvas.setWidth(this.getWidth() - 10);
         
         Group graphicGroup = new Group(graphicCanvas);
@@ -62,9 +69,11 @@ import javafx.scene.paint.Color;
         scroll.setPannable(true);
         
         this.getChildren().add(scroll);
+        
+        drawBothAxis(leftLimit, rightLimit);
     }
     
-    public final void drawBothAxis(double leftLimit, double rightLimit){
+    private void drawBothAxis(double leftLimit, double rightLimit){
         double inaccuracy = 5;
         double arrowXIndent = 15;
         
@@ -362,9 +371,7 @@ import javafx.scene.paint.Color;
         
         int listSize = coordinatesList.size();
         CoordinateClass prevCoordinate = coordinatesList.get(listSize - 2);
+        double prevCoordinateX = prevCoordinate.getX();
         double prevCoordinateY = prevCoordinate.getY();
-        if(currentCoordinateY > prevCoordinateY){
-            drawYAxis(currentCoordinateY);
-        }
     }
 }
