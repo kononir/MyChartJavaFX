@@ -26,9 +26,10 @@ import javafx.scene.paint.Color;
     private final double coordinateXIndent = 300;
     private final double coordinateYIndent = 200;
     private final double border = 50;
+    private final double inaccuracy = 15;
     private double coordinatesOriginX;
     private double coordinatesOriginY;
-    private List<CoordinateClass> coordinatesList;
+    private List<Point> pointsList;
     
     public final Canvas getGraphicCanvas(){
         return this.graphicCanvas;
@@ -41,20 +42,30 @@ import javafx.scene.paint.Color;
     public MyChart(double height, double width){
         super.setHeight(height);
         super.setWidth(width);
+        pointsList = new ArrayList();
     }
     
     public final void createWorkingSpace(double leftLimit, double rightLimit){
-        double leftLimitLength = Math.abs(Math.pow(2, leftLimit)) + 1;
-        double rightLimitLength = Math.pow(2, rightLimit) + 1;
-        
         graphicCanvas = new Canvas();
         
-        if(leftLimitLength > rightLimitLength)
-            graphicCanvas.setHeight(2 * leftLimitLength * coordinateYIndent);
-        else
-            graphicCanvas.setHeight(2 * rightLimitLength * coordinateYIndent);
-            
-        graphicCanvas.setWidth(this.getWidth() - 10);
+        double arrowIndent = 15;
+        double yAxisHeight = Math.pow(2, rightLimit) + 1;
+        double canvasHeight = yAxisHeight * coordinateYIndent + border
+                            + arrowIndent + inaccuracy;
+        graphicCanvas.setHeight(canvasHeight);
+        
+        if(Math.abs(leftLimit) > rightLimit){
+            double coordinatesLeftLimit = leftLimit * coordinateXIndent;
+            double canvasWidth = 2 * (Math.abs(coordinatesLeftLimit) + border)
+                               + arrowIndent + inaccuracy;
+            graphicCanvas.setWidth(canvasWidth);
+        }
+        else{
+            double coordinatesRightLimit = rightLimit * coordinateXIndent;
+            double canvasWidth = 2 * (coordinatesRightLimit + border)
+                               + arrowIndent + inaccuracy;
+            graphicCanvas.setWidth(canvasWidth);
+        }
         
         Group graphicGroup = new Group(graphicCanvas);
         
@@ -70,52 +81,20 @@ import javafx.scene.paint.Color;
         
         this.getChildren().add(scroll);
         
-        drawBothAxis(leftLimit, rightLimit);
+        drawXAxis();       
+        drawYAxis();
     }
     
-    private void drawBothAxis(double leftLimit, double rightLimit){
-        double inaccuracy = 5;
-        double arrowXIndent = 15;
-        
-        double YAxisWidth = graphicCanvas.getHeight() - (2 * border)
-                          - inaccuracy - arrowXIndent;
-        double YAxisWidthHalf = YAxisWidth / 2;
-        final double verticalLimit = YAxisWidthHalf / coordinateYIndent;
-        final double nullX = 0.0001;
-        
-        coordinatesList = new ArrayList();
-        
-        CoordinateClass nullCoordinate = new CoordinateClass(nullX, verticalLimit);
-        coordinatesList.add(nullCoordinate);
-        
-        drawXAxis(leftLimit, rightLimit);       
-        drawYAxis(verticalLimit);
-    }
-    
-    private void drawXAxis(double leftLimit, double rightLimit){
-        double inaccuracy = 5;
+    private void drawXAxis(){
         double arrowXIndent = 15;
         double arrowYIndent = 5;
-               
-        if(Math.abs(leftLimit) > rightLimit){
-            double coordinatesLeftLimit = leftLimit * coordinateXIndent;
-            double canvasWidth = 2 * Math.abs(coordinatesLeftLimit + border)
-                               + arrowXIndent + inaccuracy;
-            graphicCanvas.setWidth(canvasWidth);
-        }
-        else{
-            double coordinatesRightLimit = rightLimit * coordinateXIndent;
-            double canvasWidth = 2 * (coordinatesRightLimit + border)
-                               + arrowXIndent + inaccuracy;
-            graphicCanvas.setWidth(canvasWidth);
-        }
         
         double coordinatesLeftEndX = border;
         double coordinatesRightEndX = graphicCanvas.getWidth() - border;
         double XAxisWidth = coordinatesRightEndX - coordinatesLeftEndX
                           - arrowXIndent - inaccuracy;
         coordinatesOriginX = (XAxisWidth / 2) + border;
-        coordinatesOriginY = graphicCanvas.getHeight() / 2;
+        coordinatesOriginY = graphicCanvas.getHeight() - border;
      
         GraphicsContext graphicsContext = graphicCanvas.getGraphicsContext2D();
         
@@ -224,37 +203,16 @@ import javafx.scene.paint.Color;
     
     private void setCenterScrollPane(){
         double scrollHvalue = scroll.getHmax() / 2;
-        double scrollVvalue = scroll.getVmax() / 2;
+        double scrollVvalue = scroll.getVmax();
         scroll.setHvalue(scrollHvalue);
         scroll.setVvalue(scrollVvalue);
     }
     
-    private void drawYAxis(double verticalLimit){
-        double inaccuracy = 5;
+    private void drawYAxis(){
         double arrowYIndent = 15;
         double arrowXIndent = 5;
         
-        double coordinatesVerticalLimit = verticalLimit * coordinateYIndent;
-        
-        double newCanvasHeight = 2 * (coordinatesVerticalLimit + border)
-                            + arrowXIndent + inaccuracy;
-        double oldCanvasHeight = graphicCanvas.getHeight();
-        
-        if(newCanvasHeight > oldCanvasHeight)
-            graphicCanvas.setHeight(newCanvasHeight);
-        
         double coordinatesUpperEndY = border;
-        double coordinatesLowerEndY = newCanvasHeight - border;
-        double YAxisWidth = coordinatesLowerEndY - coordinatesUpperEndY
-                          - arrowXIndent - inaccuracy;
-        
-        double oldCoordinatesOriginY = coordinatesOriginY;
-        coordinatesOriginY =(YAxisWidth / 2) + border + arrowXIndent + inaccuracy;
-        
-        if(oldCoordinatesOriginY <= coordinatesOriginY){
-            double translationValue = Math.abs(oldCoordinatesOriginY - coordinatesOriginY);
-            graphicCanvas.setTranslateX(translationValue);
-        }
         
         setCenterScrollPane();
         
@@ -267,7 +225,7 @@ import javafx.scene.paint.Color;
                 coordinatesOriginX,
                 coordinatesUpperEndY,
                 coordinatesOriginX,
-                coordinatesLowerEndY
+                coordinatesOriginY
         );
         
         double coordinateArrowYAxisY = coordinatesUpperEndY + arrowYIndent;
@@ -306,16 +264,6 @@ import javafx.scene.paint.Color;
                 yCoordinate
             );
             
-            double deltaYCoordinate = coordinatesOriginY - yCoordinate;
-            double negativeYCoordinate = coordinatesOriginY + deltaYCoordinate;
-            
-            graphicsContext.strokeLine(
-                coordinateDivisionYAxisRightX,
-                negativeYCoordinate,
-                coordinateDivisionYAxisLeftX,
-                negativeYCoordinate
-            );
-            
             graphicsContext.setStroke(Color.GREEN);
         
             double axisIndent = 8;
@@ -328,17 +276,6 @@ import javafx.scene.paint.Color;
                     coordinateText,
                     divisionTextXCoordinate,
                     divisionTextYCoordinate
-            );
-            
-            double divisionTextNegativeYCoordinate = negativeYCoordinate + axisIndent;
-            double divisionTextNegativeXCoordinate = coordinatesOriginX + axisIndent;
-            double currentNegativeCoordinate = -1 * (coordinatesOriginY - yCoordinate) 
-                                             / coordinateYIndent;
-            String negativeCoordinateText = String.valueOf(currentNegativeCoordinate);
-            graphicsContext.strokeText(
-                    negativeCoordinateText,
-                    divisionTextNegativeXCoordinate,
-                    divisionTextNegativeYCoordinate
             );
         }
         
@@ -353,25 +290,51 @@ import javafx.scene.paint.Color;
     }
     
     public void repaint(double currentX, double currentY){
-        double currentCoordinateX = currentX * coordinateXIndent;
-        double currentCoordinateY = currentY * coordinateYIndent;
-        CoordinateClass coordinate = new CoordinateClass(
-                currentCoordinateX, currentCoordinateY
-        );
-        coordinatesList.add(coordinate);
-        
-        //сместить с помощью setTranslateX (Y) -> сместили в drawYAxis
-        //удалить верхушку, начиная с последнего деления до буквы "y"
-        //добавить сверху и снизу необходимое количество делений
-        //добавить верхушку
-        //прорисовать точки
-        //прорисовать линию от предыдущей точки
-              
         GraphicsContext graphicsContext = graphicCanvas.getGraphicsContext2D();
         
-        int listSize = coordinatesList.size();
-        CoordinateClass prevCoordinate = coordinatesList.get(listSize - 2);
-        double prevCoordinateX = prevCoordinate.getX();
-        double prevCoordinateY = prevCoordinate.getY();
+        graphicsContext.setFill(Color.ORANGE);
+        
+        double currentCoordinateX = currentX * coordinateXIndent;
+        double currentCoordinateY = currentY * coordinateYIndent;
+        double pointWidth = 10;
+        double pointHeight = 10;
+        double currentPointX = coordinatesOriginX - (pointWidth / 2)
+                      + currentCoordinateX;
+        double currentPointY = coordinatesOriginY - (pointHeight / 2)
+                      - currentCoordinateY;
+        graphicsContext.fillOval(
+                currentPointX,
+                currentPointY,
+                pointWidth,
+                pointHeight
+        );
+        
+        Point currentPoint = new Point(
+                currentPointX, currentPointY
+        );
+        pointsList.add(currentPoint);
+        
+        int listSize = pointsList.size();
+        
+        if(listSize == 1)
+            return;
+        
+        Point prevPoint = pointsList.get(listSize - 2);
+        double prevPointX = prevPoint.getX();
+        double prevPointY = prevPoint.getY();
+        
+        double prevPointCenterX = prevPointX + (pointWidth / 2);
+        double prevPointCenterY = prevPointY + (pointHeight / 2);
+        double currentPointCenterX = currentPointX + (pointWidth / 2);
+        double currentPointCenterY = currentPointY + (pointHeight / 2);
+        
+        graphicsContext.setStroke(Color.ORANGE);
+        
+        graphicsContext.strokeLine(
+                prevPointCenterX,
+                prevPointCenterY,
+                currentPointCenterX,
+                currentPointCenterY
+        );
     }
 }

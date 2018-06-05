@@ -5,7 +5,10 @@
  */
 package mychartjavafx;
 
+import java.util.concurrent.Semaphore;
+import javafx.animation.AnimationTimer;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
@@ -95,35 +98,46 @@ public class MyChartJavaFX extends Application {
             AnchorPane.setRightAnchor(functionChart, 15.0);
             root.getChildren().add(functionChart);
             
+            Semaphore semaphore = new Semaphore(1);
+            
             CreateChartButtonController buttonController
-                    = new CreateChartButtonController(a, xLowerLimit, xUpperLimit);
+                    = new CreateChartButtonController(a, xLowerLimit, xUpperLimit, semaphore);
             
-            double currentY = 0;
-            double currentX = xLowerLimit;
             double stepH = 0.1;
-            while(currentY != -1){
-                currentY = buttonController.controll();
-                
-                if(currentY == -1)
-                    break;
-                
-                String currentYString = String.valueOf(currentY);
-                String currentXString = String.valueOf(currentX);
-                
-                CoordinateTableClass point = new CoordinateTableClass(
-                        currentXString, currentYString
-                );
-                tableCoordinatesList.add(point);
-                
-                functionChart.repaint(currentX, currentY);
-                
-                currentX = MyMath.roundDouble(currentX + stepH, 1);
+            
+            buttonController.controll();
+            try{
+                Thread.sleep(0, 30);
+                for(double currentX = xLowerLimit;
+                        currentX <= xUpperLimit;
+                        currentX = MyMath.roundDouble(currentX + stepH, 1)){
+                    
+                    Thread.sleep(0, 50);
+                    
+                    semaphore.acquire();
+                            
+                    double currentY = buttonController.getRezult();
+
+                    String currentXString = String.valueOf(currentX);
+                    String currentYString = String.valueOf(currentY);
+
+                    CoordinateTableClass point = new CoordinateTableClass(
+                            currentXString, currentYString
+                    );
+                    tableCoordinatesList.add(point);
+
+                    functionChart.repaint(currentX, currentY);
+
+                    Scene scene = primaryStage.getScene();
+
+                    root.requestLayout();
+                    
+                    semaphore.release();
+
+                }
+            } catch(InterruptedException e){
+                System.out.println("Some problems in Drawing!");
             }
-            
-            /*currentX = Double.valueOf(tableCoordinatesList.get(tableCoordinatesList.size() - 1).getX());
-            currentY = Double.valueOf(tableCoordinatesList.get(tableCoordinatesList.size() - 1).getX());*/
-            
-            
             
             setOnGraphicScrolling(functionChart, scaleLabel);
             

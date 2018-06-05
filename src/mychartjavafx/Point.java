@@ -9,11 +9,11 @@ package mychartjavafx;
  *
  * @author Vlad
  */
-public class CoordinateClass {
+public class Point {
     private final double x;
     private final double y;
     
-    CoordinateClass(double x, double y){
+    Point(double x, double y){
         this.x = x;
         this.y = y;
     }

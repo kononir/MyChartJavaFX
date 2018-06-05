@@ -5,6 +5,8 @@
  */
 package mychartjavafx;
 
+import java.util.concurrent.Semaphore;
+
 /**
  *
  * @author Vlad
@@ -13,48 +15,31 @@ public class CreateChartButtonController {
     private final double a;
     private final double xLowerLimit;
     private final double xUpperLimit;
-    private final double stepH = 0.1;
-    private final double inaccuracyE = 0.00001;
-    private double currentX;
+    private double rezult;
+    private Calculation calculation;
+    private final Semaphore semaphore;
     
-    public CreateChartButtonController(double a, double xLowerLimit, double xUpperLimit){
+    public CreateChartButtonController(double a,
+            double xLowerLimit,
+            double xUpperLimit,
+            Semaphore semaphore){
         this.a = a;
         this.xLowerLimit = xLowerLimit;
         this.xUpperLimit = xUpperLimit;
-        currentX = xLowerLimit;
+        this.semaphore = semaphore;
     }
     
-    public final double controll(){
-        if(currentX > xUpperLimit + inaccuracyE){
-            double noX = -1;
-            return noX;
-        }
-        else{
-            double summand;
-            double currentY = 0;
-            
-            for(double i = 0; ; i++){
-                summand = Math.pow(currentX * Math.log(a), i) / fact(i);
-                if(summand < inaccuracyE){
-                    break;
-                }
-                currentY += summand;
-            }
-            
-            currentX = MyMath.roundDouble(currentX + stepH, 1);
-            
-            double roundCurrentY = MyMath.roundDouble(currentY, 4);
-            
-            return roundCurrentY;
-        }
+    public final double getRezult(){
+        rezult = calculation.getRezult();
+        return this.rezult;
     }
     
-    private double fact(double x){
-        if(x > 0)
-            return x * fact(x - 1);
-        else if(x == 0)
-            return 1;
-        else
-            return -1;
+    public final void controll(){
+        calculation = new Calculation(semaphore, a, xLowerLimit, xUpperLimit);
+        calculation.start();
     }
+    
+    
+    
+    
 }

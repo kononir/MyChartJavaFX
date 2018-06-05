@@ -18,4 +18,13 @@ public class MyMath {
                 
         return roundNumber;
     }
+    
+    public static double fact(double x){
+        if(x > 0)
+            return x * fact(x - 1);
+        else if(x == 0)
+            return 1;
+        else
+            return -1;
+    }
 }
