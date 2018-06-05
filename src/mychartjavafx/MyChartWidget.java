@@ -7,20 +7,37 @@ package mychartjavafx;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Exchanger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.input.KeyCode;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import mymath.MyMath;
 
 /**
  *
  * @author Vlad
  */
-    public class MyChart extends Region {
+public class MyChartWidget extends AnchorPane {
+    
     private Canvas graphicCanvas;
     private ScrollPane scroll;
     private final double coordinateXIndent = 300;
@@ -30,24 +47,142 @@ import javafx.scene.paint.Color;
     private double coordinatesOriginX;
     private double coordinatesOriginY;
     private final List<Point> pointsList;
-    
-    public final Canvas getGraphicCanvas(){
-        return this.graphicCanvas;
-    }
-    
-    public final ScrollPane getScroll(){
-        return this.scroll;
-    }
-    
-    public MyChart(double height, double width){
-        super.setHeight(height);
-        super.setWidth(width);
+
+    public MyChartWidget() {
+        TableView<CoordinateTableClass> coordinateTable = new TableView();
+        TableColumn<CoordinateTableClass, String> xColumn = new TableColumn("x");
+        TableColumn<CoordinateTableClass, String> yColumn = new TableColumn("y");
+        coordinateTable.getColumns().addAll(xColumn, yColumn);
+
+        xColumn.setCellValueFactory(new PropertyValueFactory<>("x"));
+        yColumn.setCellValueFactory(new PropertyValueFactory<>("y"));
+
+        coordinateTable.setMaxWidth(163);
+
+        AnchorPane.setLeftAnchor(coordinateTable, 0.0);
+        AnchorPane.setTopAnchor(coordinateTable, 0.0);
+        AnchorPane.setBottomAnchor(coordinateTable, 0.0);
+        super.getChildren().add(coordinateTable);
+
+        Label scaleLabel = new Label("Масштаб - 1:1");
+        scaleLabel.setFont(new Font("Arial", 15));
+
+        Label aLabel = new Label("a: ");
+        aLabel.setFont(new Font("Arial", 15));
+        TextField aTextField = new TextField();
+        HBox aInputHBox = new HBox(aLabel, aTextField);
+
+        Label xLabel = new Label("x: [");
+        xLabel.setFont(new Font("Arial", 15));
+        TextField xLowerLimitTextField = new TextField();
+        Label xSemicolonLabel = new Label(";");
+        xSemicolonLabel.setFont(new Font("Arial", 15));
+        TextField xUpperLimitTextField = new TextField();
+        Label xBracketLabel = new Label("]");
+        xBracketLabel.setFont(new Font("Arial", 15));
+        HBox xInputHBox = new HBox(
+                xLabel,
+                xLowerLimitTextField,
+                xSemicolonLabel,
+                xUpperLimitTextField,
+                xBracketLabel
+        );
+
+        Button createChartButton = new Button("Построить график");
+        createChartButton.setOnAction(createChart -> {
+            boolean answerCheck = checkInput(
+                    aTextField,
+                    xLowerLimitTextField,
+                    xUpperLimitTextField
+            );
+
+            if (!answerCheck) {
+                Alert wrongInputAllert = new Alert(Alert.AlertType.ERROR);
+                wrongInputAllert.setTitle("Wrong input!");
+                wrongInputAllert.setHeaderText(
+                        "Неверный ввод! Пожалуйста проверьте введённые данные и повторите попытку."
+                );
+                wrongInputAllert.showAndWait();
+                return;
+            }
+
+            String aString = aTextField.getText();
+            double a = Double.valueOf(aString);
+            String xLowerLimitString = xLowerLimitTextField.getText();
+            double xLowerLimit = Double.valueOf(xLowerLimitString);
+            String xUpperLimitString = xUpperLimitTextField.getText();
+            double xUpperLimit = Double.valueOf(xUpperLimitString);
+
+            ObservableList<CoordinateTableClass> tableCoordinatesList
+                    = FXCollections.observableArrayList();
+
+            coordinateTable.setItems(tableCoordinatesList);
+            
+            scroll = new ScrollPane();
+            graphicCanvas = new Canvas();
+            makeWorkingSpace(xLowerLimit, xUpperLimit);
+
+            AnchorPane.setBottomAnchor(scroll, 35.0);
+            AnchorPane.setLeftAnchor(scroll, 170.0);
+            AnchorPane.setRightAnchor(scroll, 15.0);
+            super.getChildren().add(scroll);
+
+            Exchanger<String> exchanger = new Exchanger();
+
+            CreateChartButtonController buttonController
+                    = new CreateChartButtonController(
+                            a,
+                            xLowerLimit,
+                            xUpperLimit,
+                            exchanger
+                    );
+
+            double stepH = 0.1;
+
+            buttonController.controll();
+            for (double currentX = xLowerLimit;
+                    currentX <= xUpperLimit;
+                    currentX = MyMath.roundDouble(currentX + stepH, 1)) {
+
+                try {
+                    double currentY = Double.valueOf(exchanger.exchange(""));
+
+                    String currentXString = String.valueOf(currentX);
+                    String currentYString = String.valueOf(currentY);
+
+                    CoordinateTableClass point = new CoordinateTableClass(
+                            currentXString, currentYString
+                    );
+                    tableCoordinatesList.add(point);
+
+                    repaint(currentX, currentY);
+
+                } catch (InterruptedException ex) {
+                    System.out.println("Some problems in Drawing!");
+                }
+
+            }
+
+            setOnGraphicScrolling(scaleLabel);
+        });
+
+        HBox functionalItemsHBox = new HBox(
+                scaleLabel,
+                aInputHBox,
+                xInputHBox,
+                createChartButton
+        );
+        functionalItemsHBox.setSpacing(7);
+
+        AnchorPane.setBottomAnchor(functionalItemsHBox, 5.0);
+        AnchorPane.setLeftAnchor(functionalItemsHBox, 170.0);
+        
+        super.getChildren().add(functionalItemsHBox);
+        
         pointsList = new ArrayList();
     }
     
-    public final void createWorkingSpace(double leftLimit, double rightLimit){
-        graphicCanvas = new Canvas();
-        
+    private void makeWorkingSpace(double leftLimit, double rightLimit){
         double arrowIndent = 15;
         double yAxisHeight = Math.pow(2, rightLimit) + 1;
         double canvasHeight = yAxisHeight * coordinateYIndent + border
@@ -72,17 +207,75 @@ import javafx.scene.paint.Color;
         HBox graphicHBox = new HBox(graphicGroup);
         graphicHBox.setAlignment(Pos.CENTER);
         
-        scroll = new ScrollPane(graphicHBox);
-        scroll.setPrefHeight(this.getHeight());
-        scroll.setPrefWidth(this.getWidth());
+        scroll.setContent(graphicHBox);
+        scroll.setPrefHeight(460); 
+        scroll.setPrefWidth(775);
         scroll.setFitToHeight(true);
         scroll.setFitToWidth(true);
         scroll.setPannable(true);
         
-        this.getChildren().add(scroll);
-        
         drawXAxis();       
         drawYAxis();
+    }
+    
+    private boolean checkInput(TextField aTextField,
+            TextField xLowerLimitTextField,
+            TextField xUpperLimitTextField) {
+
+        String aString = aTextField.getText();
+        String xLowerLimitString = xLowerLimitTextField.getText();
+        String xUpperLimitString = xUpperLimitTextField.getText();
+
+        if (aString.isEmpty()
+                || xLowerLimitString.isEmpty()
+                || xUpperLimitString.isEmpty()) {
+            return false;
+        }
+
+        Pattern digitPatern = Pattern.compile("^[0-9]+");
+
+        Matcher matcherA = digitPatern.matcher(aString);
+        Matcher matcherXLowerLimit = digitPatern.matcher(xLowerLimitString);
+        Matcher matcherXUpperLimit = digitPatern.matcher(xUpperLimitString);
+
+        return matcherA.matches() && matcherXLowerLimit.matches()
+                && matcherXUpperLimit.matches();
+    }
+
+    private void setOnGraphicScrolling(Label scaleLabel) {
+        scroll.setOnKeyPressed(ctrlKey -> {
+            KeyCode keyCode = ctrlKey.getCode();
+            if (keyCode.equals(KeyCode.CONTROL)) {
+                graphicCanvas.setOnScroll(scrolling -> {
+                    scrolling.consume();
+
+                    double zoomIntensity = 0.05;
+                    double zoomDelta = scrolling.getTextDeltaY();
+                    double zoomFactor = Math.exp(zoomDelta * zoomIntensity);
+
+                    double prevScale = graphicCanvas.getScaleX();
+                    double newScale = prevScale * zoomFactor;
+
+                    double roundNewScale = MyMath.roundDouble(newScale, 2);
+                    String newScaleString = String.valueOf(roundNewScale);
+                    String scaleLabelText = "Масштаб - " + newScaleString
+                            + ":" + newScaleString;
+                    scaleLabel.setText(scaleLabelText);
+
+                    graphicCanvas.setScaleX(newScale);
+                    graphicCanvas.setScaleY(newScale);
+
+                    scroll.layout();
+                });
+            }
+        });
+
+        scroll.setOnKeyReleased(ctrlKey -> {
+            KeyCode keyCode = ctrlKey.getCode();
+            if (keyCode.equals(KeyCode.CONTROL)) {
+                graphicCanvas.setOnScroll(null);
+            }
+        });
     }
     
     private void drawXAxis(){

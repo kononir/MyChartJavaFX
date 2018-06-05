@@ -15,7 +15,6 @@ public class CreateChartButtonController {
     private final double a;
     private final double xLowerLimit;
     private final double xUpperLimit;
-    private double rezult;
     private Calculation calculation;
     private final Exchanger<String> exchanger;
     
@@ -29,22 +28,18 @@ public class CreateChartButtonController {
         this.exchanger = exchanger;
     }
     
-    public final double getRezult(){
-        rezult = calculation.getRezult();
-        return this.rezult;
-    }
-    
     public final void controll(){
-        calculation = new Calculation(
-                        exchanger,
-                        a,
-                        xLowerLimit,
-                        xUpperLimit
-                );
-        calculation.start();
-    }
-    
-    
-    
-    
+        Thread thread = new Thread(() -> {
+            calculation = new Calculation(
+                    exchanger,
+                    a,
+                    xLowerLimit,
+                    xUpperLimit
+            );
+            
+            calculation.calculate();
+        });
+        
+        thread.start();
+    } 
 }
