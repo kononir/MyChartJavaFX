@@ -38,30 +38,29 @@ public class Calculation extends Thread {
     
     @Override
     public final void run(){
-            for(double currentX = xLowerLimit; 
-                    currentX <= xUpperLimit;
-                    currentX = MyMath.roundDouble(currentX + stepH, 1)){
-                try {
-                    
-                    double summand;
-                    double currentY = 0;
-                    
-                    for(double i = 0; ; i++){
-                        summand = Math.pow(currentX * Math.log(a), i) / fact(i);
-                        if(summand < inaccuracyE){
-                            break;
-                        }
-                        currentY += summand;
+        for(double currentX = xLowerLimit; 
+                currentX <= xUpperLimit;
+                currentX = MyMath.roundDouble(currentX + stepH, 1)){
+            try {
+
+                double summand;
+                double currentY = 0;
+
+                for(double i = 0; ; i++){
+                    summand = Math.pow(currentX * Math.log(a), i) / fact(i);
+                    if(summand < inaccuracyE){
+                        break;
                     }
-
-                    rezult = MyMath.roundDouble(currentY, 4);
-                    
-                    exchanger.exchange(String.valueOf(rezult));
-                } catch(InterruptedException e){
-                    System.out.println("Some problems in Calculation!");
+                    currentY += summand;
                 }
-            }
 
+                rezult = MyMath.roundDouble(currentY, 4);
+
+                exchanger.exchange(String.valueOf(rezult));
+            } catch(InterruptedException e){
+                System.out.println("Some problems in Calculation!");
+            }
+        }
     }
     
     

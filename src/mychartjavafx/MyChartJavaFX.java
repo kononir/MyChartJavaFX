@@ -7,7 +7,6 @@ package mychartjavafx;
 
 import java.util.concurrent.Exchanger;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
@@ -113,7 +112,23 @@ public class MyChartJavaFX extends Application {
             for(double currentX = xLowerLimit;
                     currentX <= xUpperLimit;
                     currentX = MyMath.roundDouble(currentX + stepH, 1)){
-                updateAll(currentX, exchanger, tableCoordinatesList, functionChart);
+                
+                try {
+                    double currentY = Double.valueOf(exchanger.exchange(""));
+
+                    String currentXString = String.valueOf(currentX);
+                    String currentYString = String.valueOf(currentY);
+
+                    CoordinateTableClass point = new CoordinateTableClass(
+                            currentXString, currentYString
+                    );
+                    tableCoordinatesList.add(point);
+
+                    functionChart.repaint(currentX, currentY);
+
+                } catch (InterruptedException ex) {
+                    System.out.println("Some problems in Drawing!");
+                }
                 
             }
             
@@ -137,30 +152,6 @@ public class MyChartJavaFX extends Application {
         primaryStage.setTitle("MyChart");
         primaryStage.setScene(scene);
         primaryStage.show();
-    }
-    
-    void updateAll(double currentX,
-            Exchanger<String> exchanger,
-            ObservableList<CoordinateTableClass> tableCoordinatesList,
-            MyChart functionChart){
-        Platform.runLater(() -> {
-            try {
-                double currentY = Double.valueOf(exchanger.exchange(""));
-
-                String currentXString = String.valueOf(currentX);
-                String currentYString = String.valueOf(currentY);
-
-                CoordinateTableClass point = new CoordinateTableClass(
-                        currentXString, currentYString
-                );
-                tableCoordinatesList.add(point);
-
-                functionChart.repaint(currentX, currentY);
-
-            } catch (InterruptedException ex) {
-                System.out.println("Some problems in Drawing!");
-            }
-        });
     }
     
     void setOnGraphicScrolling(MyChart functionChart, Label scaleLabel){
