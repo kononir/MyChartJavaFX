@@ -5,7 +5,8 @@
  */
 package mychartjavafx;
 
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Exchanger;
 import static mychartjavafx.MyMath.fact;
 
 /**
@@ -13,7 +14,7 @@ import static mychartjavafx.MyMath.fact;
  * @author Vlad
  */
 public class Calculation extends Thread {
-    private final Semaphore semaphore;
+    private final Exchanger<String> exchanger;
     private final double a;
     private final double xLowerLimit;
     private final double xUpperLimit;
@@ -21,11 +22,11 @@ public class Calculation extends Thread {
     private final double inaccuracyE = 0.00001;
     private double rezult;
     
-    public Calculation(Semaphore semaphore,
+    public Calculation(Exchanger<String> exchanger,
             double a,
             double xLowerLimit,
             double xUpperLimit){
-        this.semaphore = semaphore;
+        this.exchanger = exchanger;
         this.a = a;
         this.xLowerLimit = xLowerLimit;
         this.xUpperLimit = xUpperLimit;
@@ -37,34 +38,30 @@ public class Calculation extends Thread {
     
     @Override
     public final void run(){
-        try{
             for(double currentX = xLowerLimit; 
                     currentX <= xUpperLimit;
                     currentX = MyMath.roundDouble(currentX + stepH, 1)){
-                semaphore.acquire();
-
-                double summand;
-                double currentY = 0;
-
-                for(double i = 0; ; i++){
-                    summand = Math.pow(currentX * Math.log(a), i) / fact(i);
-                    if(summand < inaccuracyE){
-                        break;
+                try {
+                    
+                    double summand;
+                    double currentY = 0;
+                    
+                    for(double i = 0; ; i++){
+                        summand = Math.pow(currentX * Math.log(a), i) / fact(i);
+                        if(summand < inaccuracyE){
+                            break;
+                        }
+                        currentY += summand;
                     }
-                    currentY += summand;
+
+                    rezult = MyMath.roundDouble(currentY, 4);
+                    
+                    exchanger.exchange(String.valueOf(rezult));
+                } catch(InterruptedException e){
+                    System.out.println("Some problems in Calculation!");
                 }
-
-                rezult = MyMath.roundDouble(currentY, 4);
-
-                semaphore.release();
-
-                long ms = 0;
-                int ns = 20;
-                Thread.sleep(ms, ns);
             }
-        } catch(InterruptedException e){
-            System.out.println("Some problems in Calculation!");
-        }
+
     }
     
     

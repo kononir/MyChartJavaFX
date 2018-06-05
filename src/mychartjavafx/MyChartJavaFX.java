@@ -5,8 +5,7 @@
  */
 package mychartjavafx;
 
-import java.util.concurrent.Semaphore;
-import javafx.animation.AnimationTimer;
+import java.util.concurrent.Exchanger;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -98,49 +97,27 @@ public class MyChartJavaFX extends Application {
             AnchorPane.setRightAnchor(functionChart, 15.0);
             root.getChildren().add(functionChart);
             
-            Semaphore semaphore = new Semaphore(1);
+            Exchanger<String> exchanger = new Exchanger();
             
             CreateChartButtonController buttonController
-                    = new CreateChartButtonController(a, xLowerLimit, xUpperLimit, semaphore);
+                    = new CreateChartButtonController(
+                            a,
+                            xLowerLimit,
+                            xUpperLimit,
+                            exchanger
+                    );
             
             double stepH = 0.1;
             
             buttonController.controll();
-            try{
-                Thread.sleep(0, 30);
-                for(double currentX = xLowerLimit;
-                        currentX <= xUpperLimit;
-                        currentX = MyMath.roundDouble(currentX + stepH, 1)){
-                    
-                    Thread.sleep(0, 50);
-                    
-                    semaphore.acquire();
-                            
-                    double currentY = buttonController.getRezult();
-
-                    String currentXString = String.valueOf(currentX);
-                    String currentYString = String.valueOf(currentY);
-
-                    CoordinateTableClass point = new CoordinateTableClass(
-                            currentXString, currentYString
-                    );
-                    tableCoordinatesList.add(point);
-
-                    functionChart.repaint(currentX, currentY);
-
-                    Scene scene = primaryStage.getScene();
-
-                    root.requestLayout();
-                    
-                    semaphore.release();
-
-                }
-            } catch(InterruptedException e){
-                System.out.println("Some problems in Drawing!");
+            for(double currentX = xLowerLimit;
+                    currentX <= xUpperLimit;
+                    currentX = MyMath.roundDouble(currentX + stepH, 1)){
+                updateAll(currentX, exchanger, tableCoordinatesList, functionChart);
+                
             }
             
             setOnGraphicScrolling(functionChart, scaleLabel);
-            
         });
         
         HBox functionalItemsHBox = new HBox(
@@ -160,6 +137,30 @@ public class MyChartJavaFX extends Application {
         primaryStage.setTitle("MyChart");
         primaryStage.setScene(scene);
         primaryStage.show();
+    }
+    
+    void updateAll(double currentX,
+            Exchanger<String> exchanger,
+            ObservableList<CoordinateTableClass> tableCoordinatesList,
+            MyChart functionChart){
+        Platform.runLater(() -> {
+            try {
+                double currentY = Double.valueOf(exchanger.exchange(""));
+
+                String currentXString = String.valueOf(currentX);
+                String currentYString = String.valueOf(currentY);
+
+                CoordinateTableClass point = new CoordinateTableClass(
+                        currentXString, currentYString
+                );
+                tableCoordinatesList.add(point);
+
+                functionChart.repaint(currentX, currentY);
+
+            } catch (InterruptedException ex) {
+                System.out.println("Some problems in Drawing!");
+            }
+        });
     }
     
     void setOnGraphicScrolling(MyChart functionChart, Label scaleLabel){

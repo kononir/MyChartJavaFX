@@ -5,7 +5,7 @@
  */
 package mychartjavafx;
 
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.Exchanger;
 
 /**
  *
@@ -17,16 +17,16 @@ public class CreateChartButtonController {
     private final double xUpperLimit;
     private double rezult;
     private Calculation calculation;
-    private final Semaphore semaphore;
+    private final Exchanger<String> exchanger;
     
     public CreateChartButtonController(double a,
             double xLowerLimit,
             double xUpperLimit,
-            Semaphore semaphore){
+            Exchanger<String> exchanger){
         this.a = a;
         this.xLowerLimit = xLowerLimit;
         this.xUpperLimit = xUpperLimit;
-        this.semaphore = semaphore;
+        this.exchanger = exchanger;
     }
     
     public final double getRezult(){
@@ -35,7 +35,12 @@ public class CreateChartButtonController {
     }
     
     public final void controll(){
-        calculation = new Calculation(semaphore, a, xLowerLimit, xUpperLimit);
+        calculation = new Calculation(
+                        exchanger,
+                        a,
+                        xLowerLimit,
+                        xUpperLimit
+                );
         calculation.start();
     }
     
