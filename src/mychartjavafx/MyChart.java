@@ -29,7 +29,7 @@ import javafx.scene.paint.Color;
     private final double inaccuracy = 15;
     private double coordinatesOriginX;
     private double coordinatesOriginY;
-    private List<Point> pointsList;
+    private final List<Point> pointsList;
     
     public final Canvas getGraphicCanvas(){
         return this.graphicCanvas;

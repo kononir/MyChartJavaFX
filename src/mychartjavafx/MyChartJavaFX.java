@@ -5,12 +5,17 @@
  */
 package mychartjavafx;
 
+import mymath.MyMath;
 import java.util.concurrent.Exchanger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -76,6 +81,22 @@ public class MyChartJavaFX extends Application {
         
         Button createChartButton = new Button("Построить график");
         createChartButton.setOnAction(createChart -> {
+            boolean answerCheck = checkInput(
+                    aTextField,
+                    xLowerLimitTextField,
+                    xUpperLimitTextField
+            );
+            
+            if(!answerCheck){
+                Alert wrongInputAllert = new Alert(AlertType.ERROR);
+                wrongInputAllert.setTitle("Wrong input!");
+                wrongInputAllert.setHeaderText(
+                        "Wrong input! Please check your input and try again."
+                );
+                wrongInputAllert.showAndWait();
+                return;
+            }
+            
             String aString = aTextField.getText();
             double a = Double.valueOf(aString);
             String xLowerLimitString = xLowerLimitTextField.getText();
@@ -191,6 +212,30 @@ public class MyChartJavaFX extends Application {
                 graphicCanvas.setOnScroll(null);
             }
         });
+    }
+    
+    private boolean checkInput(TextField aTextField,
+            TextField xLowerLimitTextField,
+            TextField xUpperLimitTextField){
+        
+        String aString = aTextField.getText();
+        String xLowerLimitString = xLowerLimitTextField.getText();
+        String xUpperLimitString = xUpperLimitTextField.getText();
+        
+        if(aString.isEmpty()
+                || xLowerLimitString.isEmpty()
+                || xUpperLimitString.isEmpty()){
+            return false;
+        }
+        
+        Pattern digitPatern = Pattern.compile("^[0-9]+");
+        
+        Matcher matcherA = digitPatern.matcher(aString);
+        Matcher matcherXLowerLimit = digitPatern.matcher(xLowerLimitString);
+        Matcher matcherXUpperLimit = digitPatern.matcher(xUpperLimitString);
+        
+        return matcherA.matches() && matcherXLowerLimit.matches()
+                                  && matcherXUpperLimit.matches();
     }
 
     /**

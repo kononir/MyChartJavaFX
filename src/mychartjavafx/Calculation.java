@@ -5,9 +5,9 @@
  */
 package mychartjavafx;
 
-import java.util.concurrent.CountDownLatch;
+import mymath.MyMath;
 import java.util.concurrent.Exchanger;
-import static mychartjavafx.MyMath.fact;
+import static mymath.MyMath.fact;
 
 /**
  *
