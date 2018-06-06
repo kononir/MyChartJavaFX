@@ -7,9 +7,15 @@ package mychartjavafx;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.Exchanger;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
@@ -27,7 +33,6 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import mymath.MyMath;
@@ -47,6 +52,7 @@ public class MyChartWidget extends AnchorPane {
     private double coordinatesOriginX;
     private double coordinatesOriginY;
     private final List<Point> pointsList;
+    private double personalX;
 
     public MyChartWidget() {
         TableView<CoordinateTableClass> coordinateTable = new TableView();
@@ -140,28 +146,47 @@ public class MyChartWidget extends AnchorPane {
             double stepH = 0.1;
 
             buttonController.controll();
-            for (double currentX = xLowerLimit;
-                    currentX <= xUpperLimit;
-                    currentX = MyMath.roundDouble(currentX + stepH, 1)) {
+                
+            personalX = xLowerLimit;
 
-                try {
-                    double currentY = Double.valueOf(exchanger.exchange(""));
+            ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+            scheduler.scheduleAtFixedRate(new TimerTask(){
+                @Override
+                public void run(){
+                    Platform.runLater(new Runnable() {
+                        @Override
+                        public void run() {
 
-                    String currentXString = String.valueOf(currentX);
-                    String currentYString = String.valueOf(currentY);
+                            try {
+                                if(personalX <= xUpperLimit){
+                                    double currentY = Double.valueOf(exchanger.exchange(""));
+                                    String currentXString = String.valueOf(personalX);
+                                    String currentYString = String.valueOf(currentY);
 
-                    CoordinateTableClass point = new CoordinateTableClass(
-                            currentXString, currentYString
-                    );
-                    tableCoordinatesList.add(point);
+                                    CoordinateTableClass point = new CoordinateTableClass(
+                                            currentXString, currentYString
+                                    );
 
-                    repaint(currentX, currentY);
+                                    tableCoordinatesList.add(point);
+                                    repaint(personalX, currentY);
+                                    updatePersonalX();
+                                }
+                                else{
+                                    scheduler.shutdown();
+                                }
+                            } catch (InterruptedException ex) {
+                                System.out.println("Some problems in Drawing!");
+                            }
 
-                } catch (InterruptedException ex) {
-                    System.out.println("Some problems in Drawing!");
+                        }
+
+                        public void updatePersonalX(){
+                            personalX = MyMath.roundDouble(personalX + stepH, 1);
+                        }
+
+                    });
                 }
-
-            }
+            }, 0, 1, TimeUnit.MILLISECONDS);
 
             setOnGraphicScrolling(scaleLabel);
         });
@@ -181,6 +206,8 @@ public class MyChartWidget extends AnchorPane {
         
         pointsList = new ArrayList();
     }
+    
+    
     
     private void makeWorkingSpace(double leftLimit, double rightLimit){
         double arrowIndent = 15;
@@ -214,8 +241,17 @@ public class MyChartWidget extends AnchorPane {
         scroll.setFitToWidth(true);
         scroll.setPannable(true);
         
-        drawXAxis();       
-        drawYAxis();
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        scheduler.scheduleAtFixedRate(new TimerTask(){
+            @Override
+            public void run(){
+                Platform.runLater(() -> {
+                    drawXAxis();
+                    drawYAxis();
+                });
+                scheduler.shutdown();
+            }
+        }, 0, 1, TimeUnit.NANOSECONDS);
     }
     
     private boolean checkInput(TextField aTextField,
