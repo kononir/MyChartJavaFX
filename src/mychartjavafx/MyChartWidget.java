@@ -7,7 +7,6 @@ package mychartjavafx;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Exchanger;
 import java.util.concurrent.Executors;
@@ -42,7 +41,7 @@ import mymath.MyMath;
  * @author Vlad
  */
 public class MyChartWidget extends AnchorPane {
-    
+
     private Canvas graphicCanvas;
     private ScrollPane scroll;
     private final double coordinateXIndent = 300;
@@ -123,7 +122,7 @@ public class MyChartWidget extends AnchorPane {
                     = FXCollections.observableArrayList();
 
             coordinateTable.setItems(tableCoordinatesList);
-            
+
             scroll = new ScrollPane();
             graphicCanvas = new Canvas();
             makeWorkingSpace(xLowerLimit, xUpperLimit);
@@ -146,19 +145,19 @@ public class MyChartWidget extends AnchorPane {
             double stepH = 0.1;
 
             buttonController.controll();
-                
+
             personalX = xLowerLimit;
 
             ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-            scheduler.scheduleAtFixedRate(new TimerTask(){
+            scheduler.scheduleAtFixedRate(new TimerTask() {
                 @Override
-                public void run(){
+                public void run() {
                     Platform.runLater(new Runnable() {
                         @Override
                         public void run() {
 
                             try {
-                                if(personalX <= xUpperLimit){
+                                if (personalX <= xUpperLimit) {
                                     double currentY = Double.valueOf(exchanger.exchange(""));
                                     String currentXString = String.valueOf(personalX);
                                     String currentYString = String.valueOf(currentY);
@@ -170,8 +169,7 @@ public class MyChartWidget extends AnchorPane {
                                     tableCoordinatesList.add(point);
                                     repaint(personalX, currentY);
                                     updatePersonalX();
-                                }
-                                else{
+                                } else {
                                     scheduler.shutdown();
                                 }
                             } catch (InterruptedException ex) {
@@ -180,13 +178,13 @@ public class MyChartWidget extends AnchorPane {
 
                         }
 
-                        public void updatePersonalX(){
+                        public void updatePersonalX() {
                             personalX = MyMath.roundDouble(personalX + stepH, 1);
                         }
 
                     });
                 }
-            }, 0, 1, TimeUnit.MILLISECONDS);
+            }, 0, 1, TimeUnit.SECONDS);
 
             setOnGraphicScrolling(scaleLabel);
         });
@@ -201,50 +199,47 @@ public class MyChartWidget extends AnchorPane {
 
         AnchorPane.setBottomAnchor(functionalItemsHBox, 5.0);
         AnchorPane.setLeftAnchor(functionalItemsHBox, 170.0);
-        
+
         super.getChildren().add(functionalItemsHBox);
-        
+
         pointsList = new ArrayList();
     }
-    
-    
-    
-    private void makeWorkingSpace(double leftLimit, double rightLimit){
+
+    private void makeWorkingSpace(double leftLimit, double rightLimit) {
         double arrowIndent = 15;
         double yAxisHeight = Math.pow(2, rightLimit) + 1;
         double canvasHeight = yAxisHeight * coordinateYIndent + border
-                            + arrowIndent + inaccuracy;
+                + arrowIndent + inaccuracy;
         graphicCanvas.setHeight(canvasHeight);
-        
-        if(Math.abs(leftLimit) > rightLimit){
+
+        if (Math.abs(leftLimit) > rightLimit) {
             double coordinatesLeftLimit = leftLimit * coordinateXIndent;
             double canvasWidth = 2 * (Math.abs(coordinatesLeftLimit) + border)
-                               + arrowIndent + inaccuracy;
+                    + arrowIndent + inaccuracy;
             graphicCanvas.setWidth(canvasWidth);
-        }
-        else{
+        } else {
             double coordinatesRightLimit = rightLimit * coordinateXIndent;
             double canvasWidth = 2 * (coordinatesRightLimit + border)
-                               + arrowIndent + inaccuracy;
+                    + arrowIndent + inaccuracy;
             graphicCanvas.setWidth(canvasWidth);
         }
-        
+
         Group graphicGroup = new Group(graphicCanvas);
-        
+
         HBox graphicHBox = new HBox(graphicGroup);
         graphicHBox.setAlignment(Pos.CENTER);
-        
+
         scroll.setContent(graphicHBox);
-        scroll.setPrefHeight(460); 
+        scroll.setPrefHeight(460);
         scroll.setPrefWidth(775);
         scroll.setFitToHeight(true);
         scroll.setFitToWidth(true);
         scroll.setPannable(true);
-        
+
         ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-        scheduler.scheduleAtFixedRate(new TimerTask(){
+        scheduler.scheduleAtFixedRate(new TimerTask() {
             @Override
-            public void run(){
+            public void run() {
                 Platform.runLater(() -> {
                     drawXAxis();
                     drawYAxis();
@@ -253,7 +248,7 @@ public class MyChartWidget extends AnchorPane {
             }
         }, 0, 1, TimeUnit.NANOSECONDS);
     }
-    
+
     private boolean checkInput(TextField aTextField,
             TextField xLowerLimitTextField,
             TextField xUpperLimitTextField) {
@@ -313,30 +308,30 @@ public class MyChartWidget extends AnchorPane {
             }
         });
     }
-    
-    private void drawXAxis(){
+
+    private void drawXAxis() {
         double arrowXIndent = 15;
         double arrowYIndent = 5;
-        
+
         double coordinatesLeftEndX = border;
         double coordinatesRightEndX = graphicCanvas.getWidth() - border;
         double XAxisWidth = coordinatesRightEndX - coordinatesLeftEndX
-                          - arrowXIndent - inaccuracy;
+                - arrowXIndent - inaccuracy;
         coordinatesOriginX = (XAxisWidth / 2) + border;
         coordinatesOriginY = graphicCanvas.getHeight() - border;
-     
+
         GraphicsContext graphicsContext = graphicCanvas.getGraphicsContext2D();
-        
+
         graphicsContext.setStroke(Color.BLUE);
         graphicsContext.setLineWidth(1);
-        
+
         graphicsContext.strokeLine(
                 coordinatesLeftEndX,
                 coordinatesOriginY,
                 coordinatesRightEndX,
                 coordinatesOriginY
         );
-        
+
         double coordinateArrowXAxisX = coordinatesRightEndX - arrowXIndent;
         double coordinateArrowXAxisTopY = coordinatesOriginY - arrowYIndent;
         graphicsContext.strokeLine(
@@ -345,7 +340,7 @@ public class MyChartWidget extends AnchorPane {
                 coordinateArrowXAxisX,
                 coordinateArrowXAxisTopY
         );
-        
+
         double coordinateArrowXAxisBottomY = coordinatesOriginY + arrowYIndent;
         graphicsContext.strokeLine(
                 coordinatesRightEndX,
@@ -353,54 +348,54 @@ public class MyChartWidget extends AnchorPane {
                 coordinateArrowXAxisX,
                 coordinateArrowXAxisBottomY
         );
-        
+
         double lastXCoordinate = coordinatesRightEndX - arrowXIndent - inaccuracy;
         double stepXCoordinate = coordinateXIndent * 0.1;
         double secondRightXCoordinate = coordinatesOriginX + stepXCoordinate;
-        
-        for(double xCoordinate = secondRightXCoordinate;
+
+        for (double xCoordinate = secondRightXCoordinate;
                 xCoordinate <= lastXCoordinate;
-                xCoordinate += stepXCoordinate){
+                xCoordinate += stepXCoordinate) {
             graphicsContext.setStroke(Color.BLUE);
-            
+
             double coordinateDivisionXAxisTopY = coordinateArrowXAxisTopY;
             double coordinateDivisionXAxisBottomY = coordinateArrowXAxisBottomY;
-            
+
             graphicsContext.strokeLine(
-                xCoordinate,
-                coordinateDivisionXAxisTopY,
-                xCoordinate,
-                coordinateDivisionXAxisBottomY
+                    xCoordinate,
+                    coordinateDivisionXAxisTopY,
+                    xCoordinate,
+                    coordinateDivisionXAxisBottomY
             );
-            
+
             double deltaXCoordinate = xCoordinate - coordinatesOriginX;
             double negativeXCoordinate = coordinatesOriginX - deltaXCoordinate;
-            
+
             graphicsContext.strokeLine(
-                negativeXCoordinate,
-                coordinateDivisionXAxisTopY,
-                negativeXCoordinate,
-                coordinateDivisionXAxisBottomY
+                    negativeXCoordinate,
+                    coordinateDivisionXAxisTopY,
+                    negativeXCoordinate,
+                    coordinateDivisionXAxisBottomY
             );
-            
+
             graphicsContext.setStroke(Color.GREEN);
-        
+
             double axisIndent = 15;
             double divisionTextXCoordinate = xCoordinate - axisIndent;
             double divisionTextYCoordinate = coordinatesOriginY + axisIndent;
-            double currentCoordinate = (xCoordinate - coordinatesOriginX) 
-                                     / coordinateXIndent;
+            double currentCoordinate = (xCoordinate - coordinatesOriginX)
+                    / coordinateXIndent;
             String coordinateText = String.valueOf(currentCoordinate);
             graphicsContext.strokeText(
                     coordinateText,
                     divisionTextXCoordinate,
                     divisionTextYCoordinate
             );
-            
+
             double divisionTextNegativeXCoordinate = negativeXCoordinate - axisIndent;
             double divisionTextNegativeYCoordinate = coordinatesOriginY + axisIndent;
-            double currentNegativeCoordinate = -1 * (xCoordinate - coordinatesOriginX) 
-                                             / coordinateXIndent;
+            double currentNegativeCoordinate = -1 * (xCoordinate - coordinatesOriginX)
+                    / coordinateXIndent;
             String negativeCoordinateText = String.valueOf(currentNegativeCoordinate);
             graphicsContext.strokeText(
                     negativeCoordinateText,
@@ -408,9 +403,9 @@ public class MyChartWidget extends AnchorPane {
                     divisionTextNegativeYCoordinate
             );
         }
-        
+
         graphicsContext.setStroke(Color.GREEN);
-        
+
         double axisIndent = 15;
         double divisionTextXCoordinate = coordinatesOriginX - axisIndent;
         double divisionTextYCoordinate = coordinatesOriginY + axisIndent;
@@ -419,7 +414,7 @@ public class MyChartWidget extends AnchorPane {
                 divisionTextXCoordinate,
                 divisionTextYCoordinate
         );
-        
+
         axisIndent = 10;
         double axisTextXCoordinate = coordinatesRightEndX + axisIndent;
         double axisTextYCoordinate = coordinatesOriginY + axisIndent;
@@ -429,34 +424,34 @@ public class MyChartWidget extends AnchorPane {
                 axisTextYCoordinate
         );
     }
-    
-    private void setCenterScrollPane(){
+
+    private void setCenterScrollPane() {
         double scrollHvalue = scroll.getHmax() / 2;
         double scrollVvalue = scroll.getVmax();
         scroll.setHvalue(scrollHvalue);
         scroll.setVvalue(scrollVvalue);
     }
-    
-    private void drawYAxis(){
+
+    private void drawYAxis() {
         double arrowYIndent = 15;
         double arrowXIndent = 5;
-        
+
         double coordinatesUpperEndY = border;
-        
+
         setCenterScrollPane();
-        
+
         GraphicsContext graphicsContext = graphicCanvas.getGraphicsContext2D();
-        
+
         graphicsContext.setStroke(Color.BLUE);
         graphicsContext.setLineWidth(1);
-        
+
         graphicsContext.strokeLine(
                 coordinatesOriginX,
                 coordinatesUpperEndY,
                 coordinatesOriginX,
                 coordinatesOriginY
         );
-        
+
         double coordinateArrowYAxisY = coordinatesUpperEndY + arrowYIndent;
         double coordinateArrowYAxisLeftX = coordinatesOriginX - arrowXIndent;
         graphicsContext.strokeLine(
@@ -465,7 +460,7 @@ public class MyChartWidget extends AnchorPane {
                 coordinateArrowYAxisLeftX,
                 coordinateArrowYAxisY
         );
-        
+
         double coordinateArrowYAxisRightX = coordinatesOriginX + arrowXIndent;
         graphicsContext.strokeLine(
                 coordinatesOriginX,
@@ -473,33 +468,33 @@ public class MyChartWidget extends AnchorPane {
                 coordinateArrowYAxisRightX,
                 coordinateArrowYAxisY
         );
-        
+
         double lastYCoordinate = coordinatesUpperEndY + arrowXIndent + inaccuracy;
         double stepYCoordinate = coordinateYIndent * 0.1;
         double secondUpperYCoordinate = coordinatesOriginY - stepYCoordinate;
-        
-        for(double yCoordinate = secondUpperYCoordinate;
+
+        for (double yCoordinate = secondUpperYCoordinate;
                 yCoordinate >= lastYCoordinate;
-                yCoordinate -= stepYCoordinate){
+                yCoordinate -= stepYCoordinate) {
             graphicsContext.setStroke(Color.BLUE);
-            
+
             double coordinateDivisionYAxisRightX = coordinateArrowYAxisRightX;
             double coordinateDivisionYAxisLeftX = coordinateArrowYAxisLeftX;
-            
+
             graphicsContext.strokeLine(
-                coordinateDivisionYAxisRightX,
-                yCoordinate,
-                coordinateDivisionYAxisLeftX,
-                yCoordinate
+                    coordinateDivisionYAxisRightX,
+                    yCoordinate,
+                    coordinateDivisionYAxisLeftX,
+                    yCoordinate
             );
-            
+
             graphicsContext.setStroke(Color.GREEN);
-        
+
             double axisIndent = 8;
             double divisionTextYCoordinate = yCoordinate + axisIndent;
             double divisionTextXCoordinate = coordinatesOriginX + axisIndent;
-            double currentCoordinate = (coordinatesOriginY - yCoordinate) 
-                                     / coordinateYIndent;
+            double currentCoordinate = (coordinatesOriginY - yCoordinate)
+                    / coordinateYIndent;
             String coordinateText = String.valueOf(currentCoordinate);
             graphicsContext.strokeText(
                     coordinateText,
@@ -507,7 +502,7 @@ public class MyChartWidget extends AnchorPane {
                     divisionTextYCoordinate
             );
         }
-        
+
         double axisIndent = 5;
         double axisTextYCoordinate = coordinatesUpperEndY - axisIndent;
         double axisTextXCoordinate = coordinatesOriginX + axisIndent;
@@ -517,48 +512,49 @@ public class MyChartWidget extends AnchorPane {
                 axisTextYCoordinate
         );
     }
-    
-    public void repaint(double currentX, double currentY){
+
+    public void repaint(double currentX, double currentY) {
         GraphicsContext graphicsContext = graphicCanvas.getGraphicsContext2D();
-        
+
         graphicsContext.setFill(Color.ORANGE);
-        
+
         double currentCoordinateX = currentX * coordinateXIndent;
         double currentCoordinateY = currentY * coordinateYIndent;
         double pointWidth = 10;
         double pointHeight = 10;
         double currentPointX = coordinatesOriginX - (pointWidth / 2)
-                      + currentCoordinateX;
+                + currentCoordinateX;
         double currentPointY = coordinatesOriginY - (pointHeight / 2)
-                      - currentCoordinateY;
+                - currentCoordinateY;
         graphicsContext.fillOval(
                 currentPointX,
                 currentPointY,
                 pointWidth,
                 pointHeight
         );
-        
+
         Point currentPoint = new Point(
                 currentPointX, currentPointY
         );
         pointsList.add(currentPoint);
-        
+
         int listSize = pointsList.size();
-        
-        if(listSize == 1)
+
+        if (listSize == 1) {
             return;
-        
+        }
+
         Point prevPoint = pointsList.get(listSize - 2);
         double prevPointX = prevPoint.getX();
         double prevPointY = prevPoint.getY();
-        
+
         double prevPointCenterX = prevPointX + (pointWidth / 2);
         double prevPointCenterY = prevPointY + (pointHeight / 2);
         double currentPointCenterX = currentPointX + (pointWidth / 2);
         double currentPointCenterY = currentPointY + (pointHeight / 2);
-        
+
         graphicsContext.setStroke(Color.ORANGE);
-        
+
         graphicsContext.strokeLine(
                 prevPointCenterX,
                 prevPointCenterY,

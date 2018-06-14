@@ -15,13 +15,13 @@ import javafx.stage.Stage;
  * @author Vlad
  */
 public class MyChartJavaFX extends Application {
-    
+
     @Override
     public void start(Stage primaryStage) {
         MyChartWidget chartWidget = new MyChartWidget();
         StackPane root = new StackPane(chartWidget);
         Scene scene = new Scene(root, 950, 500);
-        
+
         primaryStage.setTitle("MyChart");
         primaryStage.setScene(scene);
         primaryStage.show();
@@ -33,5 +33,5 @@ public class MyChartJavaFX extends Application {
     public static void main(String[] args) {
         launch(args);
     }
-    
+
 }
