@@ -125,7 +125,7 @@ public class MyChartWidget extends AnchorPane {
 
             scroll = new ScrollPane();
             graphicCanvas = new Canvas();
-            makeWorkingSpace(xLowerLimit, xUpperLimit);
+            makeWorkingSpace(a, xLowerLimit, xUpperLimit);
 
             AnchorPane.setBottomAnchor(scroll, 35.0);
             AnchorPane.setLeftAnchor(scroll, 170.0);
@@ -205,9 +205,9 @@ public class MyChartWidget extends AnchorPane {
         pointsList = new ArrayList();
     }
 
-    private void makeWorkingSpace(double leftLimit, double rightLimit) {
+    private void makeWorkingSpace(double a, double leftLimit, double rightLimit) {
         double arrowIndent = 15;
-        double yAxisHeight = Math.pow(2, rightLimit) + 1;
+        double yAxisHeight = Math.pow(a, rightLimit) + 1;
         double canvasHeight = yAxisHeight * coordinateYIndent + border
                 + arrowIndent + inaccuracy;
         graphicCanvas.setHeight(canvasHeight);
@@ -236,17 +236,8 @@ public class MyChartWidget extends AnchorPane {
         scroll.setFitToWidth(true);
         scroll.setPannable(true);
 
-        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-        scheduler.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                Platform.runLater(() -> {
-                    drawXAxis();
-                    drawYAxis();
-                });
-                scheduler.shutdown();
-            }
-        }, 0, 1, TimeUnit.NANOSECONDS);
+        drawXAxis();
+        drawYAxis();
     }
 
     private boolean checkInput(TextField aTextField,
@@ -262,19 +253,40 @@ public class MyChartWidget extends AnchorPane {
                 || xUpperLimitString.isEmpty()) {
             return false;
         }
+        
+        double xLowerLimit = Double.valueOf(xLowerLimitString);
+        double xUpperLimit = Double.valueOf(xUpperLimitString);
+        
+        if(xLowerLimit > xUpperLimit){
+            return false;
+        }
+        
+        Pattern aPattern = Pattern.compile("^[0-9]+\\.?[0-9]*");
+        Pattern positiveDigitPattern = Pattern.compile("^[0-9]+(\\.[0-9])?");
+        Pattern negativeDigitPattern = Pattern.compile("^-[0-9]+(\\.?[0-9])?");
 
-        Pattern digitPatern = Pattern.compile("^[0-9]+");
-
-        Matcher matcherA = digitPatern.matcher(aString);
-        Matcher matcherXLowerLimit = digitPatern.matcher(xLowerLimitString);
-        Matcher matcherXUpperLimit = digitPatern.matcher(xUpperLimitString);
-
-        return matcherA.matches() && matcherXLowerLimit.matches()
-                && matcherXUpperLimit.matches();
+        Matcher matcherA
+                = aPattern.matcher(aString);
+        Matcher matcherPositiveXLowerLimit
+                = positiveDigitPattern.matcher(xLowerLimitString);
+        Matcher matcherNegativeXLowerLimit
+                = negativeDigitPattern.matcher(xLowerLimitString);
+        Matcher matcherPositiveXUpperLimit
+                = positiveDigitPattern.matcher(xUpperLimitString);
+        Matcher matcherNegativeXUpperLimit
+                = negativeDigitPattern.matcher(xUpperLimitString);
+        
+        boolean checkingAnswer = matcherA.matches()
+                && (matcherPositiveXLowerLimit.matches()
+                || matcherNegativeXLowerLimit.matches())
+                && (matcherPositiveXUpperLimit.matches()
+                || matcherNegativeXUpperLimit.matches());
+        
+        return checkingAnswer;
     }
 
     private void setOnGraphicScrolling(Label scaleLabel) {
-        scroll.setOnKeyPressed(ctrlKey -> {
+        this.setOnKeyPressed(ctrlKey -> {
             KeyCode keyCode = ctrlKey.getCode();
             if (keyCode.equals(KeyCode.CONTROL)) {
                 graphicCanvas.setOnScroll(scrolling -> {
@@ -301,7 +313,7 @@ public class MyChartWidget extends AnchorPane {
             }
         });
 
-        scroll.setOnKeyReleased(ctrlKey -> {
+        this.setOnKeyReleased(ctrlKey -> {
             KeyCode keyCode = ctrlKey.getCode();
             if (keyCode.equals(KeyCode.CONTROL)) {
                 graphicCanvas.setOnScroll(null);

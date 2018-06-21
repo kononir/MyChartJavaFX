@@ -7,14 +7,13 @@ package mychartjavafx;
 
 import mymath.MyMath;
 import java.util.concurrent.Exchanger;
-import javafx.concurrent.Task;
 import static mymath.MyMath.fact;
 
 /**
  *
  * @author Vlad
  */
-public class Calculation extends Task {
+public class Calculation implements Runnable {
 
     private final Exchanger<String> exchanger;
     private final double a;
@@ -35,7 +34,7 @@ public class Calculation extends Task {
     }
 
     @Override
-    protected Object call() throws Exception {
+    public void run() {
         for (double currentX = xLowerLimit;
                 currentX <= xUpperLimit;
                 currentX = MyMath.roundDouble(currentX + stepH, 1)) {
@@ -58,7 +57,6 @@ public class Calculation extends Task {
                 System.out.println("Some problems in Calculation!");
             }
         }
-        return null;
     }
 
 }

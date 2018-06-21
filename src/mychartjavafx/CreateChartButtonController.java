@@ -36,6 +36,8 @@ public class CreateChartButtonController {
                 xUpperLimit
         );
 
-        new Thread(calculation).start();
+        Thread calculationThread = new Thread(calculation);
+        calculationThread.setDaemon(true);
+        calculationThread.start();
     }
 }
